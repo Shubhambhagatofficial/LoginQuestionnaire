@@ -30,6 +30,11 @@ struct QuestionnaireView: View {
     }
 
     private let service = QuestionnaireService()
+    private let breakService = BreakService()
+    @State private var isStartingBreak = false
+    @State private var breakStartError: String?
+    @State private var showBreakErrorAlert = false
+    private let defaultBreakDurationSeconds = 300
     private let accentColor = Color(red: 0.45, green: 0.35, blue: 0.85)
     private let disabledButtonGray = Color(red: 0.9, green: 0.9, blue: 0.92)
     private let disabledTextGray = Color(red: 0.5, green: 0.5, blue: 0.55)
@@ -336,18 +341,51 @@ struct QuestionnaireView: View {
 
     private var continueButton: some View {
         Button {
-            appState.showBreak()
+            startBreakAndNavigate()
         } label: {
-            Text("Continue")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(canContinue ? accentColor : disabledButtonGray)
-                .foregroundStyle(canContinue ? .white : disabledTextGray)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+            Group {
+                if isStartingBreak {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Text("Continue")
+                }
+            }
+            .font(.headline)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(canContinue && !isStartingBreak ? accentColor : disabledButtonGray)
+            .foregroundStyle(canContinue && !isStartingBreak ? .white : disabledTextGray)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-        .disabled(!canContinue)
+        .disabled(!canContinue || isStartingBreak)
         .padding(.top, 8)
+        .alert("Break could not start", isPresented: $showBreakErrorAlert) {
+            Button("OK") { showBreakErrorAlert = false; breakStartError = nil }
+        } message: {
+            if let err = breakStartError { Text(err) }
+        }
+    }
+
+    private func startBreakAndNavigate() {
+        isStartingBreak = true
+        breakStartError = nil
+        Task {
+            do {
+                let duration = try await breakService.fetchBreakDuration() ?? defaultBreakDurationSeconds
+                try await breakService.startBreak(durationSeconds: duration)
+                await MainActor.run {
+                    isStartingBreak = false
+                    appState.showBreak()
+                }
+            } catch {
+                await MainActor.run {
+                    isStartingBreak = false
+                    breakStartError = error.localizedDescription
+                    showBreakErrorAlert = true
+                }
+            }
+        }
     }
 }
 

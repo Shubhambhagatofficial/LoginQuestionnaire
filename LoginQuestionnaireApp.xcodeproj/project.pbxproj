@@ -11,6 +11,7 @@
 		3658A41DF81A7CCCC0930D51 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA97FCE2E1C3DC94B0AB773E /* ContentView.swift */; };
 		8042BA892F5AD40C00076372 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8042BA872F5AD40C00076372 /* FirebaseCore */; };
 		8042BA8A2F5AD40C00076372 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 8042BA882F5AD40C00076372 /* FirebaseFirestore */; };
+		8042BA8E2F5AD40C00076372 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 8042BA8F2F5AD40C00076372 /* FirebaseAuth */; };
 		B76440C71D6D05765489F90F /* LoginQuestionnaireAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00C378AD967709DA5D62842 /* LoginQuestionnaireAppApp.swift */; };
 		C0F296BAB74A603FB30080BF /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2727C4771B3B3173DF3FE4F7 /* AppState.swift */; };
 		C3F3206FC4C8C07662B1B39E /* QuestionnaireView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7959AD8C3DBD2795D05552ED /* QuestionnaireView.swift */; };
@@ -18,6 +19,7 @@
 		Q1M1Q2S3E4R5V6I7C8E9A0B3 /* QuestionnaireService.swift in Sources */ = {isa = PBXBuildFile; fileRef = Q1M1Q2S3E4R5V6I7C8E9A0B1 /* QuestionnaireService.swift */; };
 		Q1M1Q2S3E4R5V6I7C8E9A0B4 /* QuestionnaireModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = Q1M1Q2S3E4R5V6I7C8E9A0B2 /* QuestionnaireModels.swift */; };
 		8042BA8C2F5AE58000076372 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8042BA862F5AE58000076372 /* GoogleService-Info.plist */; };
+		B1R2E3A4K5S6E7R8V9I0C11 /* BreakService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1R2E3A4K5S6E7R8V9I0C12 /* BreakService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +33,7 @@
 		FCDCB84C84CFC396C6CCE1FF /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		Q1M1Q2S3E4R5V6I7C8E9A0B1 /* QuestionnaireService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireService.swift; sourceTree = "<group>"; };
 		Q1M1Q2S3E4R5V6I7C8E9A0B2 /* QuestionnaireModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireModels.swift; sourceTree = "<group>"; };
+		B1R2E3A4K5S6E7R8V9I0C12 /* BreakService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -40,6 +43,7 @@
 			files = (
 				8042BA892F5AD40C00076372 /* FirebaseCore in Frameworks */,
 				8042BA8A2F5AD40C00076372 /* FirebaseFirestore in Frameworks */,
+				8042BA8E2F5AD40C00076372 /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,6 +89,7 @@
 				7959AD8C3DBD2795D05552ED /* QuestionnaireView.swift */,
 				Q1M1Q2S3E4R5V6I7C8E9A0B1 /* QuestionnaireService.swift */,
 				Q1M1Q2S3E4R5V6I7C8E9A0B2 /* QuestionnaireModels.swift */,
+				B1R2E3A4K5S6E7R8V9I0C12 /* BreakService.swift */,
 			);
 			path = LoginQuestionnaireApp;
 			sourceTree = "<group>";
@@ -108,6 +113,7 @@
 			packageProductDependencies = (
 				8042BA872F5AD40C00076372 /* FirebaseCore */,
 				8042BA882F5AD40C00076372 /* FirebaseFirestore */,
+				8042BA8F2F5AD40C00076372 /* FirebaseAuth */,
 			);
 			productName = LoginQuestionnaireApp;
 			productReference = E8271B7B94E2D963D4DC4706 /* LoginQuestionnaireApp.app */;
@@ -156,6 +162,7 @@
 				C3F3206FC4C8C07662B1B39E /* QuestionnaireView.swift in Sources */,
 				Q1M1Q2S3E4R5V6I7C8E9A0B3 /* QuestionnaireService.swift in Sources */,
 				Q1M1Q2S3E4R5V6I7C8E9A0B4 /* QuestionnaireModels.swift in Sources */,
+				B1R2E3A4K5S6E7R8V9I0C11 /* BreakService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -367,6 +374,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 8042BA852F5AD40C00076372 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseFirestore;
+		};
+		8042BA8F2F5AD40C00076372 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8042BA852F5AD40C00076372 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

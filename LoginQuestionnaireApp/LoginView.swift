@@ -4,21 +4,24 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct LoginView: View {
     @EnvironmentObject var appState: AppState
 
-    @State private var username: String = ""
+    @State private var email: String = ""
     @State private var password: String = ""
     @State private var hasReferralCode: Bool = false
+    @State private var isLoggingIn: Bool = false
+    @State private var loginError: String?
     @FocusState private var focusedField: Field?
 
     private enum Field {
-        case username, password
+        case email, password
     }
 
     private var canContinue: Bool {
-        !username.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !email.trimmingCharacters(in: .whitespaces).isEmpty &&
         !password.isEmpty
     }
 
@@ -45,6 +48,11 @@ struct LoginView: View {
             .background(Color(.systemBackground))
             .navigationTitle("Login")
             .navigationBarTitleDisplayMode(.inline)
+            .alert("Login failed", isPresented: .constant(loginError != nil)) {
+                Button("OK") { loginError = nil }
+            } message: {
+                if let err = loginError { Text(err) }
+            }
         }
     }
 
@@ -57,13 +65,14 @@ struct LoginView: View {
 
     private var inputFields: some View {
         VStack(spacing: 16) {
-            TextField("Enter your username", text: $username)
-                .textContentType(.username)
+            TextField("Enter your email", text: $email)
+                .textContentType(.emailAddress)
+                .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
-                .focused($focusedField, equals: .username)
+                .focused($focusedField, equals: .email)
                 .textFieldStyle(LoginFieldStyle(
-                    borderColor: focusedField == .username ? accentColor : (!username.isEmpty ? borderFocused : borderGray)
+                    borderColor: focusedField == .email ? accentColor : (!email.isEmpty ? borderFocused : borderGray)
                 ))
 
             SecureField("Enter password", text: $password)
@@ -118,18 +127,70 @@ struct LoginView: View {
 
     private var continueButton: some View {
         Button {
-            appState.login()
+            signInOrSignUp()
         } label: {
-            Text("Continue")
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(canContinue ? accentColor : disabledButtonGray)
-                .foregroundStyle(canContinue ? .white : disabledTextGray)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+            Group {
+                if isLoggingIn {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Text("Continue")
+                }
+            }
+            .font(.headline)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(canContinue && !isLoggingIn ? accentColor : disabledButtonGray)
+            .foregroundStyle(canContinue && !isLoggingIn ? .white : disabledTextGray)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-        .disabled(!canContinue)
+        .disabled(!canContinue || isLoggingIn)
         .padding(.top, 8)
+    }
+
+    private func signInOrSignUp() {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedEmail.isEmpty, !trimmedPassword.isEmpty else { return }
+        guard trimmedEmail.contains("@"), trimmedEmail.contains("."), trimmedEmail.first != "@", trimmedEmail.last != "." else {
+            loginError = "Please enter a valid email address."
+            return
+        }
+        guard trimmedPassword.count >= 6 else {
+            loginError = "Password must be at least 6 characters."
+            return
+        }
+        isLoggingIn = true
+        loginError = nil
+        Task {
+            do {
+                try await Auth.auth().signIn(withEmail: trimmedEmail, password: trimmedPassword)
+                await MainActor.run {
+                    isLoggingIn = false
+                    appState.login(username: trimmedEmail.components(separatedBy: "@").first ?? trimmedEmail)
+                }
+            } catch let error as NSError {
+                if error.domain == AuthErrorDomain, error.code == AuthErrorCode.userNotFound.rawValue {
+                    do {
+                        try await Auth.auth().createUser(withEmail: trimmedEmail, password: trimmedPassword)
+                        await MainActor.run {
+                            isLoggingIn = false
+                            appState.login(username: trimmedEmail.components(separatedBy: "@").first ?? trimmedEmail)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            isLoggingIn = false
+                            loginError = error.localizedDescription
+                        }
+                    }
+                } else {
+                    await MainActor.run {
+                        isLoggingIn = false
+                        loginError = error.localizedDescription
+                    }
+                }
+            }
+        }
     }
 }
 
