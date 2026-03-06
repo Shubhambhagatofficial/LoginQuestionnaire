@@ -143,7 +143,7 @@ private struct LoginFieldStyle: TextFieldStyle {
             .background(Color(.systemBackground))
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(borderColor, lineWidth: 1)
+                    .stroke(borderColor, lineWidth: 2)
             )
             .clipShape(RoundedRectangle(cornerRadius: 10))
     }

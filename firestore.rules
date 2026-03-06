@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write to questionnaires, sections, and sectionOptions (for development).
+    // Restrict these rules before production (e.g. require auth).
+    match /questionnaires/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /sections/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /sectionOptions/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
