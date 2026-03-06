@@ -126,32 +126,47 @@ struct LoginView: View {
     }
 
     private var continueButton: some View {
-        Button {
-            signInOrSignUp()
-        } label: {
-            Group {
-                if isLoggingIn {
-                    ProgressView()
-                        .tint(.white)
-                } else {
-                    Text("Continue")
-                }
-            }
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(canContinue && !isLoggingIn ? accentColor : disabledButtonGray)
-            .foregroundStyle(canContinue && !isLoggingIn ? .white : disabledTextGray)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-        .disabled(!canContinue || isLoggingIn)
-        .padding(.top, 8)
+		VStack {
+			Button {
+				signInOrSignUp()
+			} label: {
+				Group {
+					if isLoggingIn {
+						ProgressView()
+							.tint(.white)
+					} else {
+						Text("Continue")
+					}
+				}
+				.font(.headline)
+				.frame(maxWidth: .infinity)
+				.padding(.vertical, 16)
+				.background(canContinue && !isLoggingIn ? accentColor : disabledButtonGray)
+				.foregroundStyle(canContinue && !isLoggingIn ? .white : disabledTextGray)
+				.clipShape(RoundedRectangle(cornerRadius: 12))
+			}
+			.disabled(!canContinue || isLoggingIn)
+			.padding(.top, 8)
+			Text("Demo: \(Self.demoEmail) / \(Self.demoPassword)")
+				.font(.caption2)
+				.foregroundStyle(.tertiary)
+		}
     }
+
+    /// Demo account – bypasses Firebase. Use this to try the app while Auth is being fixed.
+    private static let demoEmail = "demo@demo.com"
+    private static let demoPassword = "demo123"
 
     private func signInOrSignUp() {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedEmail.isEmpty, !trimmedPassword.isEmpty else { return }
+
+        if trimmedEmail == Self.demoEmail && trimmedPassword == Self.demoPassword {
+            appState.login(username: "Demo", useDemoAccount: true)
+            return
+        }
+
         guard trimmedEmail.contains("@"), trimmedEmail.contains("."), trimmedEmail.first != "@", trimmedEmail.last != "." else {
             loginError = "Please enter a valid email address."
             return

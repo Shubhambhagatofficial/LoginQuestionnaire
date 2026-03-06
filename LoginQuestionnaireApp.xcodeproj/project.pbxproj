@@ -20,6 +20,7 @@
 		Q1M1Q2S3E4R5V6I7C8E9A0B4 /* QuestionnaireModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = Q1M1Q2S3E4R5V6I7C8E9A0B2 /* QuestionnaireModels.swift */; };
 		8042BA8C2F5AE58000076372 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8042BA862F5AE58000076372 /* GoogleService-Info.plist */; };
 		B1R2E3A4K5S6E7R8V9I0C11 /* BreakService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1R2E3A4K5S6E7R8V9I0C12 /* BreakService.swift */; };
+		M1B1R2E3A4K5S6E7R8V9I0 /* BreakModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = M1B1R2E3A4K5S6E7R8V9I1 /* BreakModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +35,7 @@
 		Q1M1Q2S3E4R5V6I7C8E9A0B1 /* QuestionnaireService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireService.swift; sourceTree = "<group>"; };
 		Q1M1Q2S3E4R5V6I7C8E9A0B2 /* QuestionnaireModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireModels.swift; sourceTree = "<group>"; };
 		B1R2E3A4K5S6E7R8V9I0C12 /* BreakService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakService.swift; sourceTree = "<group>"; };
+		M1B1R2E3A4K5S6E7R8V9I1 /* BreakModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakModels.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,18 +82,51 @@
 		DE19BC0FCD9967748D44BE6A /* LoginQuestionnaireApp */ = {
 			isa = PBXGroup;
 			children = (
-				2727C4771B3B3173DF3FE4F7 /* AppState.swift */,
-				60A850BFADFB128861CBC670 /* BreakView.swift */,
-				EA97FCE2E1C3DC94B0AB773E /* ContentView.swift */,
 				A00C378AD967709DA5D62842 /* LoginQuestionnaireAppApp.swift */,
 				8042BA862F5AE58000076372 /* GoogleService-Info.plist */,
-				FCDCB84C84CFC396C6CCE1FF /* LoginView.swift */,
-				7959AD8C3DBD2795D05552ED /* QuestionnaireView.swift */,
-				Q1M1Q2S3E4R5V6I7C8E9A0B1 /* QuestionnaireService.swift */,
-				Q1M1Q2S3E4R5V6I7C8E9A0B2 /* QuestionnaireModels.swift */,
-				B1R2E3A4K5S6E7R8V9I0C12 /* BreakService.swift */,
+				GRP001MODELS /* Models */,
+				GRP002VIEWMODELS /* ViewModels */,
+				GRP003VIEWS /* Views */,
+				GRP004SERVICES /* Services */,
 			);
 			path = LoginQuestionnaireApp;
+			sourceTree = "<group>";
+		};
+		GRP001MODELS /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				Q1M1Q2S3E4R5V6I7C8E9A0B2 /* QuestionnaireModels.swift */,
+				M1B1R2E3A4K5S6E7R8V9I1 /* BreakModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		GRP002VIEWMODELS /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				2727C4771B3B3173DF3FE4F7 /* AppState.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		GRP003VIEWS /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				EA97FCE2E1C3DC94B0AB773E /* ContentView.swift */,
+				FCDCB84C84CFC396C6CCE1FF /* LoginView.swift */,
+				7959AD8C3DBD2795D05552ED /* QuestionnaireView.swift */,
+				60A850BFADFB128861CBC670 /* BreakView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		GRP004SERVICES /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				Q1M1Q2S3E4R5V6I7C8E9A0B1 /* QuestionnaireService.swift */,
+				B1R2E3A4K5S6E7R8V9I0C12 /* BreakService.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -163,6 +198,7 @@
 				Q1M1Q2S3E4R5V6I7C8E9A0B3 /* QuestionnaireService.swift in Sources */,
 				Q1M1Q2S3E4R5V6I7C8E9A0B4 /* QuestionnaireModels.swift in Sources */,
 				B1R2E3A4K5S6E7R8V9I0C11 /* BreakService.swift in Sources */,
+				M1B1R2E3A4K5S6E7R8V9I0 /* BreakModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

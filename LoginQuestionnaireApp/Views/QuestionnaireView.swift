@@ -7,6 +7,8 @@ import SwiftUI
 
 private let defaultScreenId = "skillsQuestionnaire"
 
+private let kQuestionnaireAnswersPrefix = "LoginQuestionnaire.questionnaireAnswers."
+
 struct QuestionnaireView: View {
     @EnvironmentObject var appState: AppState
 
@@ -106,6 +108,7 @@ struct QuestionnaireView: View {
             .navigationTitle(screen?.title ?? "Questionnaire")
             .navigationBarTitleDisplayMode(.inline)
             .task { loadQuestionnaire() }
+            .onDisappear { saveAnswers() }
         }
     }
 
@@ -126,6 +129,7 @@ struct QuestionnaireView: View {
                             dateValues[i] = dateValues[i] ?? DateInput()
                         }
                     }
+                    restoreSavedAnswers()
                 }
             } catch {
                 await MainActor.run {
@@ -134,6 +138,46 @@ struct QuestionnaireView: View {
                 }
             }
         }
+    }
+
+    private func restoreSavedAnswers() {
+        let cb = UserDefaults.standard.dictionary(forKey: kQuestionnaireAnswersPrefix + defaultScreenId + ".checkbox") as? [String: [String]]
+        let rad = UserDefaults.standard.dictionary(forKey: kQuestionnaireAnswersPrefix + defaultScreenId + ".radio") as? [String: String]
+        let dat = UserDefaults.standard.dictionary(forKey: kQuestionnaireAnswersPrefix + defaultScreenId + ".date") as? [String: [String: String]]
+        if let cb = cb {
+            for (k, arr) in cb {
+                if let i = Int(k) { checkboxSelections[i] = Set(arr) }
+            }
+        }
+        if let rad = rad {
+            for (k, v) in rad {
+                if let i = Int(k) { radioSelections[i] = v }
+            }
+        }
+        if let dat = dat {
+            for (k, parts) in dat {
+                guard let i = Int(k) else { continue }
+                var d = dateValues[i] ?? DateInput()
+                d.day = parts["day"] ?? ""
+                d.month = parts["month"] ?? ""
+                d.year = parts["year"] ?? ""
+                dateValues[i] = d
+            }
+        }
+    }
+
+    private func saveAnswers() {
+        var cb: [String: [String]] = [:]
+        for (k, set) in checkboxSelections { cb[String(k)] = Array(set) }
+        var rad: [String: String] = [:]
+        for (k, v) in radioSelections { rad[String(k)] = v }
+        var dat: [String: [String: String]] = [:]
+        for (k, d) in dateValues {
+            dat[String(k)] = ["day": d.day, "month": d.month, "year": d.year]
+        }
+        UserDefaults.standard.set(cb, forKey: kQuestionnaireAnswersPrefix + defaultScreenId + ".checkbox")
+        UserDefaults.standard.set(rad, forKey: kQuestionnaireAnswersPrefix + defaultScreenId + ".radio")
+        UserDefaults.standard.set(dat, forKey: kQuestionnaireAnswersPrefix + defaultScreenId + ".date")
     }
 
     private func questionnaireContent(screen: QuestionnaireScreen) -> some View {
@@ -368,6 +412,7 @@ struct QuestionnaireView: View {
     }
 
     private func startBreakAndNavigate() {
+        saveAnswers()
         isStartingBreak = true
         breakStartError = nil
         Task {
