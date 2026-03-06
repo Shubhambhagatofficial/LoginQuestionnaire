@@ -38,34 +38,25 @@ final class QuestionnaireService {
         let title = questionnaireData["title"] as? String ?? ""
         let subtitle = questionnaireData["subtitle"] as? String ?? ""
 
-        // 2. Fetch sections that belong to this questionnaire.
-        // Query by BOTH Reference and path string, then merge – Firestore treats Reference vs string as different,
-        // so some docs may match only one query (e.g. one radio section missing).
-        let resolvedQuestionnaireRef = db.collection("questionnaires").document(resolvedQuestionnaireId)
-        let pathWithSlash = "/questionnaires/\(resolvedQuestionnaireId)"
-        let pathNoSlash = "questionnaires/\(resolvedQuestionnaireId)"
+        // 2. Fetch ALL sections, then filter by questionnaire in code (avoids Reference vs string query mismatch).
+        let expectedPath = "questionnaires/\(resolvedQuestionnaireId)"
+        let expectedPathWithSlash = "/questionnaires/\(resolvedQuestionnaireId)"
 
-        let snapByRef = try await db.collection("sections")
-            .whereField("questionnaire", isEqualTo: resolvedQuestionnaireRef)
-            .getDocuments()
-        let snapByPathSlash = try await db.collection("sections")
-            .whereField("questionnaire", isEqualTo: pathWithSlash)
-            .getDocuments()
-        let snapByPathNoSlash = try await db.collection("sections")
-            .whereField("questionnaire", isEqualTo: pathNoSlash)
-            .getDocuments()
-
-        var seenIds: Set<String> = []
-        var sectionDocs: [QueryDocumentSnapshot] = []
-        for doc in snapByRef.documents + snapByPathSlash.documents + snapByPathNoSlash.documents {
-            if seenIds.insert(doc.documentID).inserted {
-                sectionDocs.append(doc)
+        let allSectionsSnap = try await db.collection("sections").limit(to: 50).getDocuments()
+        var sectionDocs: [QueryDocumentSnapshot] = allSectionsSnap.documents.filter { doc in
+            let data = doc.data()
+            guard let questionnaireValue = data["questionnaire"] else { return false }
+            if let ref = questionnaireValue as? DocumentReference {
+                return ref.path == expectedPath || ref.path.hasSuffix(expectedPath)
             }
+            if let pathString = questionnaireValue as? String {
+                return pathString == expectedPath || pathString == expectedPathWithSlash
+                    || pathString.hasSuffix(expectedPath) || pathString.hasSuffix(expectedPathWithSlash)
+            }
+            return false
         }
         sectionDocs.sort { (a, b) in
-            let orderA = a.data()["order"] as? Int ?? 0
-            let orderB = b.data()["order"] as? Int ?? 0
-            return orderA < orderB
+            orderValue(a.data()["order"]) < orderValue(b.data()["order"])
         }
 
         // 3. For each section, fetch options from sectionOptions and build QuestionnaireSection
@@ -105,11 +96,7 @@ final class QuestionnaireService {
                     }
                 }
                 var optionDocs = optionsSnap.documents
-                optionDocs.sort { (a, b) in
-                    let orderA = a.data()["order"] as? Int ?? 0
-                    let orderB = b.data()["order"] as? Int ?? 0
-                    return orderA < orderB
-                }
+                optionDocs.sort { orderValue($0.data()["order"]) < orderValue($1.data()["order"]) }
                 options = optionDocs.compactMap { $0.data()["value"] as? String }
             }
 
@@ -126,6 +113,13 @@ final class QuestionnaireService {
 
         return QuestionnaireScreen(title: title, subtitle: subtitle, sections: sections)
     }
+}
+
+private func orderValue(_ value: Any?) -> Int {
+    if let i = value as? Int { return i }
+    if let i64 = value as? Int64 { return Int(i64) }
+    if let d = value as? Double { return Int(d) }
+    return 0
 }
 
 enum QuestionnaireError: LocalizedError {
