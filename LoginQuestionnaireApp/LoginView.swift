@@ -63,14 +63,14 @@ struct LoginView: View {
                 .autocorrectionDisabled()
                 .focused($focusedField, equals: .username)
                 .textFieldStyle(LoginFieldStyle(
-                    borderColor: focusedField == .username || !username.isEmpty ? borderFocused : borderGray
+                    borderColor: focusedField == .username ? accentColor : (!username.isEmpty ? borderFocused : borderGray)
                 ))
 
             SecureField("Enter password", text: $password)
                 .textContentType(.password)
                 .focused($focusedField, equals: .password)
                 .textFieldStyle(LoginFieldStyle(
-                    borderColor: focusedField == .password || !password.isEmpty ? borderFocused : borderGray
+                    borderColor: focusedField == .password ? accentColor : (!password.isEmpty ? borderFocused : borderGray)
                 ))
         }
     }
