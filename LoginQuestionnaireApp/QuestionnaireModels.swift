@@ -20,6 +20,8 @@ struct QuestionnaireSection: Codable {
     let options: [String]?
     let hasNoneOfTheAbove: Bool?
     let required: Bool?
+    /// When set (e.g. "Yes"), the user must select this exact option for Continue to be enabled. Use for radio sections.
+    let requiredValue: String?
 
     var isRequired: Bool { required ?? true }
 

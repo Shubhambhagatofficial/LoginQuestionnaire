@@ -43,7 +43,10 @@ struct QuestionnaireView: View {
             case "checkbox":
                 if (checkboxSelections[index] ?? []).isEmpty { return false }
             case "radio":
-                if radioSelections[index] == nil { return false }
+                guard let selected = radioSelections[index] else { return false }
+                if let requiredVal = section.requiredValue, selected != requiredVal {
+                    return false
+                }
             case "date":
                 let d = dateValues[index] ?? DateInput()
                 if d.day.isEmpty || d.month.isEmpty || d.year.count < 4 { return false }

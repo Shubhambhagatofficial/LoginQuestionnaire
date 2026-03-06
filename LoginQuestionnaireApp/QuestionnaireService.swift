@@ -69,6 +69,7 @@ final class QuestionnaireService {
             let label = sectionData["label"] as? String
             let required = sectionData["required"] as? Bool ?? true
             let hasNoneOfTheAbove = sectionData["hasNoneOfTheAbove"] as? Bool ?? false
+            let requiredValue = sectionData["requiredValue"] as? String
 
             // Options: section may be stored as DocumentReference or path string
             let sectionRef = db.collection("sections").document(sectionId)
@@ -106,7 +107,8 @@ final class QuestionnaireService {
                 label: label,
                 options: options.isEmpty ? nil : options,
                 hasNoneOfTheAbove: hasNoneOfTheAbove,
-                required: required
+                required: required,
+                requiredValue: requiredValue
             )
             sections.append(section)
         }
