@@ -9,10 +9,8 @@ import FirebaseAuth
 private let kDemoLoginKey = "LoginQuestionnaire.demoLogin"
 private let kDemoUsernameKey = "LoginQuestionnaire.demoUsername"
 private let kBreakStartedKey = "LoginQuestionnaire.breakStarted"
+private let kHasLaunchedBeforeKey = "LoginQuestionnaire.hasLaunchedBefore"
 
-/// Tracks auth and which screen to show: Login → Questionnaire → Break.
-/// Auth state is driven by Firebase Auth (persisted by SDK) or demo account (persisted in UserDefaults).
-/// If user already pressed Continue, flow is restored to break screen on next launch.
 final class AppState: ObservableObject {
     @Published var isLoggedIn: Bool = false
     @Published var currentFlow: AppFlow = .questionnaire
@@ -27,6 +25,12 @@ final class AppState: ObservableObject {
     }
 
     init() {
+        // After app delete + reinstall, UserDefaults is empty but Firebase Auth may still restore a session from Keychain.
+        // If we have never set hasLaunchedBefore, this is first launch (or first launch after reinstall) → sign out Firebase so user gets a fresh start.
+        if UserDefaults.standard.object(forKey: kHasLaunchedBeforeKey) == nil {
+            try? Auth.auth().signOut()
+            UserDefaults.standard.set(true, forKey: kHasLaunchedBeforeKey)
+        }
         authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             DispatchQueue.main.async {
                 guard let self = self else { return }

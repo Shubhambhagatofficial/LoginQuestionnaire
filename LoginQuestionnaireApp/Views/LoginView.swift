@@ -14,6 +14,7 @@ struct LoginView: View {
     @State private var hasReferralCode: Bool = false
     @State private var isLoggingIn: Bool = false
     @State private var loginError: String?
+    @State private var showNewUserCreationAlert = false
     @FocusState private var focusedField: Field?
 
     private enum Field {
@@ -52,6 +53,13 @@ struct LoginView: View {
                 Button("OK") { loginError = nil }
             } message: {
                 if let err = loginError { Text(err) }
+            }
+            .alert("New account", isPresented: $showNewUserCreationAlert) {
+                Button("OK") {
+                    createNewUserWithCurrentCredentials()
+                }
+            } message: {
+                Text("A new account is being created with this email and password.")
             }
         }
     }
@@ -193,22 +201,9 @@ struct LoginView: View {
                     error.code == 17009
                 )
                 if noAccount {
-                    do {
-                        try await Auth.auth().createUser(withEmail: trimmedEmail, password: trimmedPassword)
-                        await MainActor.run {
-                            isLoggingIn = false
-                            appState.login(username: trimmedEmail.components(separatedBy: "@").first ?? trimmedEmail)
-                        }
-                    } catch let signUpError as NSError {
-                        await MainActor.run {
-                            isLoggingIn = false
-                            if signUpError.domain == AuthErrorDomain,
-                               signUpError.code == AuthErrorCode.emailAlreadyInUse.rawValue || signUpError.code == 17007 {
-                                loginError = "An account with this email already exists. Please sign in with your password."
-                            } else {
-                                loginError = authErrorMessage(signUpError)
-                            }
-                        }
+                    await MainActor.run {
+                        isLoggingIn = false
+                        showNewUserCreationAlert = true
                     }
                 } else {
                     await MainActor.run {
@@ -220,6 +215,37 @@ struct LoginView: View {
                 await MainActor.run {
                     isLoggingIn = false
                     loginError = (error as NSError).localizedDescription
+                }
+            }
+        }
+    }
+
+    /// Called when user taps OK on "New account" pop-up; creates the account with current email and password.
+    private func createNewUserWithCurrentCredentials() {
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let trimmedPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedEmail.isEmpty, trimmedPassword.count >= 6 else {
+            loginError = "Password must be at least 6 characters."
+            return
+        }
+        isLoggingIn = true
+        loginError = nil
+        Task {
+            do {
+                try await Auth.auth().createUser(withEmail: trimmedEmail, password: trimmedPassword)
+                await MainActor.run {
+                    isLoggingIn = false
+                    appState.login(username: trimmedEmail.components(separatedBy: "@").first ?? trimmedEmail)
+                }
+            } catch let signUpError as NSError {
+                await MainActor.run {
+                    isLoggingIn = false
+                    if signUpError.domain == AuthErrorDomain,
+                       signUpError.code == AuthErrorCode.emailAlreadyInUse.rawValue || signUpError.code == 17007 {
+                        loginError = "An account with this email already exists. Please sign in with your password."
+                    } else {
+                        loginError = authErrorMessage(signUpError)
+                    }
                 }
             }
         }
