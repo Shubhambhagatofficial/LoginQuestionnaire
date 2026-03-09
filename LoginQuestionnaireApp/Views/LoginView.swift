@@ -185,26 +185,75 @@ struct LoginView: View {
                     appState.login(username: trimmedEmail.components(separatedBy: "@").first ?? trimmedEmail)
                 }
             } catch let error as NSError {
-                if error.domain == AuthErrorDomain, error.code == AuthErrorCode.userNotFound.rawValue {
+                // No account? Create a fresh account on Firebase (sign up).
+                let noAccount = error.domain == AuthErrorDomain && (
+                    error.code == AuthErrorCode.userNotFound.rawValue ||
+                    error.code == AuthErrorCode.invalidCredential.rawValue ||
+                    error.code == 17011 ||
+                    error.code == 17009
+                )
+                if noAccount {
                     do {
                         try await Auth.auth().createUser(withEmail: trimmedEmail, password: trimmedPassword)
                         await MainActor.run {
                             isLoggingIn = false
                             appState.login(username: trimmedEmail.components(separatedBy: "@").first ?? trimmedEmail)
                         }
-                    } catch {
+                    } catch let signUpError as NSError {
                         await MainActor.run {
                             isLoggingIn = false
-                            loginError = error.localizedDescription
+                            if signUpError.domain == AuthErrorDomain,
+                               signUpError.code == AuthErrorCode.emailAlreadyInUse.rawValue || signUpError.code == 17007 {
+                                loginError = "An account with this email already exists. Please sign in with your password."
+                            } else {
+                                loginError = authErrorMessage(signUpError)
+                            }
                         }
                     }
                 } else {
                     await MainActor.run {
                         isLoggingIn = false
-                        loginError = error.localizedDescription
+                        loginError = authErrorMessage(error)
                     }
                 }
+            } catch {
+                await MainActor.run {
+                    isLoggingIn = false
+                    loginError = (error as NSError).localizedDescription
+                }
             }
+        }
+    }
+
+    /// User-friendly message for Firebase Auth errors; helps debug "Auth not working".
+    private func authErrorMessage(_ error: NSError) -> String {
+        guard error.domain == AuthErrorDomain else {
+            return error.localizedDescription
+        }
+        switch AuthErrorCode(rawValue: error.code) {
+        case .invalidEmail:
+            return "Please enter a valid email address."
+        case .wrongPassword:
+            return "Incorrect password. Please try again."
+        case .userDisabled:
+            return "This account has been disabled."
+        case .emailAlreadyInUse:
+            return "This email is already registered. Try signing in instead."
+        case .operationNotAllowed:
+            return "Email/Password sign-in is not enabled. In Firebase Console go to Authentication → Sign-in method and enable Email/Password."
+        case .weakPassword:
+            return "Password is not suitable. Use at least 6 characters and avoid very common or easy-to-guess passwords."
+        case .networkError:
+            return "Network error. Check your connection and try again."
+        case .invalidCredential:
+            return "Incorrect email or password. Please try again."
+        case .userNotFound:
+            return "No account with this email. Tap Continue again to create an account."
+        default:
+            if error.localizedDescription.lowercased().contains("password") {
+                return "Password is not suitable. Use at least 6 characters and avoid very common passwords."
+            }
+            return error.localizedDescription
         }
     }
 }

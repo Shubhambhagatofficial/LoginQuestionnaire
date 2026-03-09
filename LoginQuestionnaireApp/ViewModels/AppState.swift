@@ -72,9 +72,9 @@ final class AppState: ObservableObject {
             UserDefaults.standard.set(true, forKey: kDemoLoginKey)
             UserDefaults.standard.set(currentUsername, forKey: kDemoUsernameKey)
         } else {
-            if !username.isEmpty {
-                currentUsername = username.trimmingCharacters(in: .whitespaces)
-            }
+            isDemoUser = false
+            isLoggedIn = true
+            currentUsername = username.isEmpty ? "" : username.trimmingCharacters(in: .whitespaces)
             UserDefaults.standard.removeObject(forKey: kDemoLoginKey)
             UserDefaults.standard.removeObject(forKey: kDemoUsernameKey)
         }
