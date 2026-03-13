@@ -19,6 +19,8 @@ struct QuestionnaireView: View {
     @State private var radioSelections: [Int: String] = [:]
     @State private var dateValues: [Int: DateInput] = [:]
     @FocusState private var focusedDateField: DateField?
+    @State private var showDatePickerForSection: Int? = nil
+    @State private var datePickerSelectedDate: Date = Date()
 
     private struct DateInput {
         var day: String = ""
@@ -349,6 +351,8 @@ struct QuestionnaireView: View {
             get: { dateValues[index] ?? DateInput() },
             set: { dateValues[index] = $0 }
         )
+        let hasValue = !(binding.day.wrappedValue.isEmpty && binding.month.wrappedValue.isEmpty && binding.year.wrappedValue.isEmpty)
+        let borderColor = (showDatePickerForSection == index || hasValue) ? borderFocused : borderGray
         return VStack(alignment: .leading, spacing: 12) {
             Text(section.displayText)
                 .font(.subheadline)
@@ -356,29 +360,102 @@ struct QuestionnaireView: View {
                 .foregroundStyle(.primary)
 
             HStack(spacing: 12) {
-                TextField("DD", text: binding.day)
-                    .keyboardType(.numberPad)
-                    .multilineTextAlignment(.center)
-                    .focused($focusedDateField, equals: .field(sectionIndex: index, part: .day))
-                    .textFieldStyle(QuestionnaireFieldStyle(
-                        borderColor: focusedDateField == .field(sectionIndex: index, part: .day) ? accentColor : (!binding.day.wrappedValue.isEmpty ? borderFocused : borderGray)
-                    ))
+                dateField(value: binding.day.wrappedValue, placeholder: "DD", borderColor: borderColor)
+                dateField(value: binding.month.wrappedValue, placeholder: "MM", borderColor: borderColor)
+                dateField(value: binding.year.wrappedValue, placeholder: "YYYY", borderColor: borderColor)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                focusedDateField = nil
+                if let existing = parsedDate(from: dateValues[index] ?? DateInput()),
+                   existing <= Self.datePickerMaxDate {
+                    datePickerSelectedDate = existing
+                } else {
+                    datePickerSelectedDate = Self.datePickerMaxDate
+                }
+                showDatePickerForSection = index
+            }
+        }
+        .sheet(isPresented: Binding(
+            get: { showDatePickerForSection == index },
+            set: { if !$0 { showDatePickerForSection = nil } }
+        )) {
+            datePickerSheet(sectionIndex: index)
+        }
+    }
 
-                TextField("MM", text: binding.month)
-                    .keyboardType(.numberPad)
-                    .multilineTextAlignment(.center)
-                    .focused($focusedDateField, equals: .field(sectionIndex: index, part: .month))
-                    .textFieldStyle(QuestionnaireFieldStyle(
-                        borderColor: focusedDateField == .field(sectionIndex: index, part: .month) ? accentColor : (!binding.month.wrappedValue.isEmpty ? borderFocused : borderGray)
-                    ))
+    private func dateField(value: String, placeholder: String, borderColor: Color) -> some View {
+        Text(value.isEmpty ? placeholder : value)
+            .font(.body)
+            .foregroundStyle(value.isEmpty ? Color.secondary : Color.primary)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 14)
+            .background(Color(.systemBackground))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(borderColor, lineWidth: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
 
-                TextField("YYYY", text: binding.year)
-                    .keyboardType(.numberPad)
-                    .multilineTextAlignment(.center)
-                    .focused($focusedDateField, equals: .field(sectionIndex: index, part: .year))
-                    .textFieldStyle(QuestionnaireFieldStyle(
-                        borderColor: focusedDateField == .field(sectionIndex: index, part: .year) ? accentColor : (!binding.year.wrappedValue.isEmpty ? borderFocused : borderGray)
-                    ))
+    private func parsedDate(from d: DateInput) -> Date? {
+        guard let day = Int(d.day), let month = Int(d.month), let year = Int(d.year),
+              (1...31).contains(day), (1...12).contains(month), year >= 1900, year <= 2100 else { return nil }
+        var comp = DateComponents()
+        comp.day = day
+        comp.month = month
+        comp.year = year
+        return Calendar.current.date(from: comp)
+    }
+
+    private static var datePickerMinDate: Date {
+        Calendar.current.date(byAdding: .year, value: -100, to: Date()) ?? Date()
+    }
+
+    private static var datePickerMaxDate: Date {
+        let cal = Calendar.current
+        let startOfToday = cal.startOfDay(for: Date())
+        return cal.date(byAdding: .second, value: -1, to: startOfToday) ?? startOfToday
+    }
+
+    private func datePickerSheet(sectionIndex: Int) -> some View {
+        let validRange = Self.datePickerMinDate ... Self.datePickerMaxDate
+        return NavigationStack {
+            VStack(spacing: 20) {
+                DatePicker(
+                    "Select date",
+                    selection: $datePickerSelectedDate,
+                    in: validRange,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.graphical)
+                .padding(.horizontal)
+                Spacer()
+            }
+            .padding(.top, 20)
+            .navigationTitle("Select date")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        let cal = Calendar.current
+                        let comp = cal.dateComponents([.day, .month, .year], from: datePickerSelectedDate)
+                        var d = dateValues[sectionIndex] ?? DateInput()
+                        d.day = String(format: "%02d", comp.day ?? 0)
+                        d.month = String(format: "%02d", comp.month ?? 0)
+                        d.year = String(comp.year ?? 0)
+                        var updated = dateValues
+                        updated[sectionIndex] = d
+                        dateValues = updated
+                        showDatePickerForSection = nil
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        showDatePickerForSection = nil
+                    }
+                }
             }
         }
     }
